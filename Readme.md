@@ -28,14 +28,14 @@ This project is a small web application built with Express.js and React.js. It p
 4. Start the backend server:
 
    ```
-   node index.js
+   npm start
    ```
 
 5. Start the frontend development server:
 
    ```
    cd client
-   npm start
+   npm run dev
    ```
 
 6. Access the application in your browser at `http://localhost:5173`.
