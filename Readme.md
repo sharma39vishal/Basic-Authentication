@@ -26,9 +26,15 @@ This project is a small web application built with Express.js and React.js. It p
    ```
 
 4. Start the backend server:
-
+   
+   (Production)
    ```
    npm start
+   ```
+
+   (Development)
+   ```
+   npm run dev
    ```
 
 5. Start the frontend development server:
