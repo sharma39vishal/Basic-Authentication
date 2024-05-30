@@ -1,17 +1,36 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import JSEncrypt from 'jsencrypt';
 
 const SignIn = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  const publicKey = `-----BEGIN PUBLIC KEY-----
+  MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnXdBJGcAArRAlTi/jDzQ
+  JCaXKvFb8jfZSB12q59t0TYimIQoGPOxWJkBN72zd52dzb9Y1KrLUXYmvKRHFmzm
+  Qe7da/nyxBKVkKURdvIDfJNJVj6tFYhQQqpJP6oHZpDLXYyP2/XG/DuLUzpSrJ2j
+  viwhK9P6SAIJjfo+dhR+7+i0Aedf6/2L9snw3uVyvMPuE1HhGbXsVZ5uYsIrUt2t
+  n6H+RPyYb5QfFtPljmpCPsoekIZVqhis5NGr82DypBjDT0NO9qIPczCBso3jP3Aj
+  W4++pqJ9H4sd0/vvJRubjrXX9CtIWXbjyWuiBTxH+Mwd3VVNl6VblU/Y6be5cqoR
+  MQIDAQAB
+  -----END PUBLIC KEY-----`;
+
+  const encryptPassword = (password) => {
+    const encrypt = new JSEncrypt();
+    encrypt.setPublicKey(publicKey);
+    return encrypt.encrypt(password);
+  };
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/api/auth/signin', { email, password }, { withCredentials: true });
-      console.log('Signin successful:', response.data);
+      const encryptedPassword = encryptPassword(password);
+      const response = await axios.post('/api/auth/signin', { email,password: encryptedPassword  }, { withCredentials: true });
+      // console.log('Signin successful:', response.data);
       window.location.href = '/';
 
       // Redirect or perform any other action upon successful signin

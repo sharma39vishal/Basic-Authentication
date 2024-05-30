@@ -3,10 +3,21 @@ const router = express.Router();
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const JSEncrypt = require('node-jsencrypt');
+const forge = require('node-forge');
+
+
+const decryptPassword = (encryptedPassword) => {
+  const decrypt = new JSEncrypt();
+  decrypt.setPrivateKey(process.env.PRIVATE_PASSWORD_KEY);
+  const decrypted = decrypt.decrypt(encryptedPassword);
+  return decrypted;
+};
 
 router.post('/signup', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email,  password: encryptedPassword } = req.body;
+    const password = decryptPassword(encryptedPassword);
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ username, email, password: hashedPassword });
@@ -18,7 +29,8 @@ router.post('/signup', async (req, res) => {
 
 router.post('/signin', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email,password: encryptedPassword } = req.body;
+    const password = decryptPassword(encryptedPassword);
     const user = await User.findOne({ email });
     if (!user) {
       throw new Error('Invalid email or password');
