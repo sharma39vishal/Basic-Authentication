@@ -1,4 +1,4 @@
-import React from 'react'
+// import React from 'react'
 import {  Route, Routes } from "react-router-dom"
 import Home from "./Pages/Home/Home"
 import SignUp from './Pages/SignUp/SignUp'
@@ -8,6 +8,7 @@ import Profile from './Pages/Profile/Profile'
 import AfterLoginRoutes from './Pages/ProtectedRoutes/AfterLoginRoutes'
 import Error404Page from './Pages/ErrorPage/Error404Page'
 import BeforeLoginRoutes from './Pages/ProtectedRoutes/BeforeLoginRoutes'
+import ForgetPassword from './Pages/Forgetpassword/Forget'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
        <Route exact path="/" element={<AfterLoginRoutes> <Home/> </AfterLoginRoutes>}/>
         <Route exact path="/profile" element={<AfterLoginRoutes> <Profile/> </AfterLoginRoutes> }/>
         <Route exact path="/signin" element={<BeforeLoginRoutes> <SignIn/> </BeforeLoginRoutes>}/>
+        <Route exact path="/forget" element={<BeforeLoginRoutes> <ForgetPassword/> </BeforeLoginRoutes>}/>
         <Route exact path="/signup" element={<BeforeLoginRoutes><SignUp/></BeforeLoginRoutes> }/>
         <Route path="*" element={<Error404Page/>}/>
       </Routes>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
@@ -51,6 +51,7 @@ const SignIn = () => {
         <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300">Sign In</button>
       </form>
       <p className="mt-4">Don't have an account? <Link to="/signup" className="text-blue-500 hover:underline">Sign Up</Link></p>
+      <p className="mt-4">Forget Password? <Link to="/forget" className="text-blue-500 hover:underline">Reset</Link></p>
     </div>
   );
 };
