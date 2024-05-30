@@ -59,4 +59,66 @@ router.get('/logout', (req, res) => {
   }
 })
 
+// Google Authentication routes
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.clientID,
+      clientSecret: process.env.clientSecret,
+      callbackURL: '/api/auth/google/callback',
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        let user = await User.findOne({ email: profile.emails[0].value });
+        if (!user) {
+          const newUser = new User({
+            username: profile.displayName,
+            email: profile.emails[0].value,
+            password: '', // Google sign-in, so no password is needed
+          });
+          user = await newUser.save();
+        }
+        done(null, user);
+      } catch (error) {
+        done(error, false);
+      }
+    }
+  )
+);
+
+// Google sign-in route
+router.get(
+  '/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { failureRedirect: '/signin' }),
+  (req, res) => {
+    res.redirect('/api/auth/isgoogleauthenticated');
+  }
+);
+
+router.get('/isgoogleauthenticated', (req, res) => {
+  if (req.isAuthenticated()) {
+    const token = jwt.sign({ userId: req.user._id }, process.env.JWT_SECRET, {
+      expiresIn: '3h',
+    });
+    res.cookie('token', token, {
+      maxAge: 3 * 60 * 60 * 1000,
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    });
+    res.status(200).redirect('http://localhost:3000');
+  } else {
+    res.status(401).send('Unauthorized');
+  }
+});
+
+
 module.exports = router;
