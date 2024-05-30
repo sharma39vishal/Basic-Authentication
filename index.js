@@ -31,6 +31,9 @@ mongoose.connect(process.env.MDB_CONNECT)
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/profile', require('./routes/profile'));
+app.use('/api/email', require('./routes/email'));
+// app.use('/api/verify', require('./routes/verify'));
+
 
 app.listen(PORT, err => {
   if (err) throw err;
