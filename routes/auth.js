@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const JSEncrypt = require('node-jsencrypt');
 const forge = require('node-forge');
-
+const session = require("express-session");
 
 const decryptPassword = (encryptedPassword) => {
   const decrypt = new JSEncrypt();
@@ -61,8 +61,34 @@ router.get('/logout', (req, res) => {
 })
 
 // Google Authentication routes
+const { v4: uuidv4 } = require('uuid');
+const MongoDBStore = require("connect-mongodb-session")(session);
+const store = new MongoDBStore({
+  uri: process.env.MDB_CONNECT, // Replace with your MongoDB connection string
+  collection: "sessions", // Name of the collection to store sessions in
+  autoRemove: "native", // Automatically remove expired sessions from the store
+});
+
+store.on("error", function (error) {
+  console.error("MongoDB session store error:", error);
+});
+
+router.use(
+  session({
+    secret: process.env.JWT_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    store: store,
+    cookie: { secure: false },
+  })
+);
+
+
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+
+router.use(passport.initialize());
+router.use(passport.session());
 
 passport.use(
   new GoogleStrategy(
@@ -70,25 +96,22 @@ passport.use(
       clientID: process.env.clientID,
       clientSecret: process.env.clientSecret,
       callbackURL: '/api/auth/google/callback',
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        let user = await User.findOne({ email: profile.emails[0].value });
-        if (!user) {
-          const newUser = new User({
-            username: profile.displayName,
-            email: profile.emails[0].value,
-            password: '', // Google sign-in, so no password is needed
-          });
-          user = await newUser.save();
-        }
-        done(null, user);
-      } catch (error) {
-        done(error, false);
-      }
+    },function (accessToken, refreshToken, profile, cb) {
+      // Use the profile information to authenticate the user
+      // ...
+      cb(null, profile);
     }
   )
 );
+
+passport.serializeUser(function (user, cb) {
+  cb(null, user);
+});
+
+passport.deserializeUser(function (obj, cb) {
+  cb(null, obj);
+});
+
 
 // Google sign-in route
 router.get(
@@ -104,9 +127,19 @@ router.get(
   }
 );
 
-router.get('/isgoogleauthenticated', (req, res) => {
+router.get('/isgoogleauthenticated', async (req, res) => {
+  // console.log(req);
   if (req.isAuthenticated()) {
-    const token = jwt.sign({ userId: req.user._id }, process.env.JWT_SECRET, {
+    let user = await User.findOne({ email: req.user._json.email });
+    if (!user) {
+      const newUser = new User({
+        username: uuidv4(),
+        email: req.user._json.email,
+        password: '$2a$10$wzdGw3AxZc4.1aI3xd3CAu6Ft1iFmwKDu4oPC5CnsPtKqDOIboCvG',
+      });
+      user = await newUser.save();
+    }
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: '3h',
     });
     res.cookie('token', token, {
@@ -115,7 +148,7 @@ router.get('/isgoogleauthenticated', (req, res) => {
       secure: true,
       sameSite: 'none',
     });
-    res.status(200).redirect('http://localhost:3000');
+    res.status(200).redirect('http://localhost:5173');
   } else {
     res.status(401).send('Unauthorized');
   }
